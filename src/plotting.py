@@ -1,39 +1,34 @@
 """Pareto-front plots and results tables for the report.
 
-plot_pareto_fronts()  - f1 against f2, NSGA-II and SPEA2 on the same axes
-save_results_table()  - prints the table, saves it as CSV and as a PNG image
-
-Both write into FIGURES_DIR / TABLES_DIR from config.yaml.
+Files are saved in FIGURES_DIR and TABLES_DIR from config.yaml.
 """
 
 import csv
 
 import matplotlib
 
-matplotlib.use("Agg")   # draw to files only; works without a screen
+matplotlib.use("Agg")   # draw to files only, so it works without a screen
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 from src.util.fetch_config import FIGURES_DIR, PLOT_DPI, TABLES_DIR
 
-# One fixed colour and marker per algorithm, so they are told apart by shape
-# as well as colour (also readable in black-and-white print).
+# Each algorithm differs in both colour and marker shape
+# so the plot is also readable in black and white print
 STYLE = {
-    "NSGA-II": {"color": "#2a78d6", "marker": "o"},   # blue, circles
-    "SPEA2":   {"color": "#eb6834", "marker": "^"},   # orange, triangles
+    "NSGA-II": {"color": "#2a78d6", "marker": "o"},   # blue circles
+    "SPEA2":   {"color": "#eb6834", "marker": "^"},   # orange triangles
 }
 TEXT_COLOR = "#3d3d3a"
 GRID_COLOR = "#e4e3dd"
 
-thousands = FuncFormatter(lambda value, _: f"{value:,.0f}")
+thousands = FuncFormatter(lambda value, _: f"{value:,.0f}")   # axis labels like 1,000,000
 
 
 def plot_pareto_fronts(instance_name, fronts, caption_note=""):
-    """Plot the final fronts of both algorithms on the same axes.
+    """Plots the final fronts of both algorithms on the same axes and returns the PNG path.
 
-    fronts:       {"NSGA-II": array (k, 2), "SPEA2": array (k, 2)}, raw objective values
-    caption_note: short text shown under the title, e.g. "C1, combined front of 10 runs"
-    Returns the path of the saved PNG.
+    fronts maps each algorithm name to its raw objective values, and caption_note is shown under the title.
     """
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
@@ -53,6 +48,7 @@ def plot_pareto_fronts(instance_name, fronts, caption_note=""):
     ax.set_ylabel("f2: customer-allocation cost (minimise)", color=TEXT_COLOR)
     ax.xaxis.set_major_formatter(thousands)
     ax.yaxis.set_major_formatter(thousands)
+    # Light grid and only the left and bottom axis lines keep the focus on the data
     ax.grid(color=GRID_COLOR, linewidth=0.8)
     ax.set_axisbelow(True)
     for side in ("top", "right"):
@@ -70,17 +66,14 @@ def plot_pareto_fronts(instance_name, fronts, caption_note=""):
 
 
 def save_results_table(instance_name, rows):
-    """Print the results table and save it as CSV and PNG.
+    """Prints the results table and saves it as CSV and PNG, returning both paths.
 
-    rows: list of dicts with the same keys, one per algorithm and configuration, e.g.
-      {"Config": "C1", "Algorithm": "NSGA-II", "HV mean ± std": "0.8123 ± 0.0040", ...}
-    Values should already be formatted as text (analyze_results.py does that).
-    Returns (csv_path, png_path).
+    rows is a list of dicts with already formatted text, one per algorithm and configuration.
     """
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     headers = list(rows[0].keys())
 
-    # 1. print as aligned text
+    # 1. Print as aligned text
     widths = [max(len(str(h)), *(len(str(r[h])) for r in rows)) for h in headers]
     print(f"\nResults for {instance_name}")
     print("  ".join(h.ljust(w) for h, w in zip(headers, widths)))
@@ -88,14 +81,14 @@ def save_results_table(instance_name, rows):
     for row in rows:
         print("  ".join(str(row[h]).ljust(w) for h, w in zip(headers, widths)))
 
-    # 2. CSV
+    # 2. Save as CSV
     csv_path = TABLES_DIR / f"results_{instance_name}.csv"
     with open(csv_path, "w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
         writer.writerows(rows)
 
-    # 3. PNG image of the table (handy for the report; the report caption names the instance)
+    # 3. Save as a PNG image for the report, where the caption names the instance
     fig, ax = plt.subplots(figsize=(1.35 * len(headers), 0.4 * (len(rows) + 2)))
     ax.axis("off")
     table = ax.table(cellText=[[row[h] for h in headers] for row in rows],
@@ -104,6 +97,7 @@ def save_results_table(instance_name, rows):
     table.set_fontsize(9)
     table.scale(1, 1.4)
     table.auto_set_column_width(list(range(len(headers))))   # fit each column to its text
+    # Grey borders and a bold shaded header row
     for (r, _), cell in table.get_celld().items():
         cell.set_edgecolor("#b5b4ad")
         if r == 0:
