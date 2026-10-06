@@ -67,7 +67,7 @@ ACIT4610-A2-Group2/
 ├── README.md
 ├── data/
 │   └── orlib/
-│       ├── cap41.txt ... cap122.txt    the six OR-Library instances
+│       ├── cap61.txt ... cap122.txt    the six OR-Library instances
 │       ├── capopt.txt                  kept for reference, not used
 │       └── SHA256SUMS                  hashes that prove the data is unmodified
 ├── results/                    created by the pipeline
@@ -124,8 +124,8 @@ Run k of both algorithms uses the seed `base_seed + k`, so every result can be r
 
 ## Data
 
-The six instances cap41, cap42, cap101, cap102, cap121 and cap122 come unmodified from the OR-Library by J. E. Beasley. They are stored in `data/orlib`, and `SHA256SUMS` lets the code verify that they have not changed.
+The six instances cap61, cap62, cap101, cap102, cap121 and cap122 come unmodified from the OR-Library by J. E. Beasley. They are stored in `data/orlib`, and `SHA256SUMS` lets the code verify that they have not changed.
 
-cap41 and cap42 have no feasible solution under the assignment's rules. The assignment requires every customer to be assigned to exactly one opened facility (`Σi xij = 1`) without exceeding that facility's capacity (`Σj dj xij ≤ Si yi`). Customers 11 and 34 have demands of 5,495 and 12,912, which exceed the capacity of 5,000 of every facility, so no single facility can serve them. The code detects this and reports both instances as infeasible instead of running the algorithms on them. Setting `oversized_demand` to `split` in `config.yaml` would split these customers into smaller parts served by several facilities, which would only be used if the assignment allowed it.
+cap61 and cap62 replace the original small instances cap41 and cap42, following a correction from the lecturer. In cap41 and cap42 some customers demand more than any single facility can hold, which makes them infeasible under the assignment's requirement that every customer is assigned to exactly one opened facility (`Σi xij = 1`) without exceeding that facility's capacity (`Σj dj xij ≤ Si yi`). Customer demand is never split or changed. The code still checks every instance and reports an instance as infeasible if a customer cannot fit in any facility.
 
 `capopt.txt` is kept for reference and is not used by the code.

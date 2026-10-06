@@ -24,7 +24,6 @@ FIGURES_DIR = PROJECT_ROOT / _config["paths"]["figures_dir"]
 
 # Instances
 INSTANCES = _config["instances"]                 # size category mapped to instance name
-OVERSIZED_DEMAND = _config["oversized_demand"]   # report_infeasible or split
 
 # Experiment
 N_RUNS = _config["experiment"]["n_runs"]

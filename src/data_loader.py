@@ -4,12 +4,11 @@ Other modules only need get_instance(name).
 """
 
 import hashlib
-import math
 from dataclasses import dataclass
 
 import numpy as np
 
-from src.util.fetch_config import CHECKSUM_FILE, DATA_DIR, INSTANCES, OVERSIZED_DEMAND
+from src.util.fetch_config import CHECKSUM_FILE, DATA_DIR, INSTANCES
 
 
 class InfeasibleInstanceError(Exception):
@@ -24,9 +23,6 @@ class Instance:
     fixed_cost: np.ndarray   # F_i with one value per facility, used in objective f1
     demand: np.ndarray       # d_j with one value per customer
     cost: np.ndarray         # C_ij as an m by n matrix, used in objective f2
-    # Customer number in the cap file, 1-based
-    # It equals j + 1 unless oversized customers were split
-    original_customer: np.ndarray
 
     @property
     def m(self):
@@ -97,15 +93,14 @@ def load_instance(name):
         fixed_cost=facility_part[:, 1],
         demand=customer_part[:, 0],
         cost=customer_part[:, 1:].T,      # the file lists costs per customer, so transpose to C[i, j]
-        original_customer=np.arange(1, n + 1),
     )
 
 
-# 3. Feasibility check and handling of oversized customers
+# 3. Feasibility check
 def prepare_instance(inst):
     """Makes sure a feasible solution with one facility per customer can exist.
 
-    Oversized customers are handled as set by OVERSIZED_DEMAND in config.yaml.
+    Customer demand is never split, so an instance that fails the check is reported as infeasible.
     """
     total_demand, total_capacity = inst.demand.sum(), inst.capacity.sum()
     if total_demand > total_capacity:
@@ -115,44 +110,12 @@ def prepare_instance(inst):
     # A customer larger than every facility can never be served by one facility
     largest_capacity = inst.capacity.max()
     oversized = np.flatnonzero(inst.demand > largest_capacity)
-    if len(oversized) == 0:
-        return inst
-
-    details = ", ".join(f"customer {j + 1} (demand {inst.demand[j]:,.0f})" for j in oversized)
-    if OVERSIZED_DEMAND == "report_infeasible":
+    if len(oversized) > 0:
+        details = ", ".join(f"customer {j + 1} (demand {inst.demand[j]:,.0f})" for j in oversized)
         raise InfeasibleInstanceError(
             f"{inst.name} has no feasible solution: {details} exceed(s) the largest facility "
             f"capacity of {largest_capacity:,.0f}, but every customer must be served by exactly one facility.")
-    if OVERSIZED_DEMAND == "split":
-        print(f"WARNING: {inst.name}: splitting {details} into parts of at most {largest_capacity:,.0f}.")
-        return split_oversized_customers(inst, largest_capacity)
-    raise ValueError(f"Unknown oversized_demand setting in config.yaml: {OVERSIZED_DEMAND!r}")
-
-
-def split_oversized_customers(inst, part_size):
-    """Replaces every customer larger than part_size by several smaller customers.
-
-    For example demand 12,912 with part_size 5,000 becomes 5,000 and 5,000 and 2,912.
-    """
-    demands, cost_columns, origins = [], [], []
-    for j in range(inst.n):
-        d = inst.demand[j]
-        n_parts = math.ceil(d / part_size)
-        for k in range(n_parts):
-            part = min(part_size, d - k * part_size)
-            demands.append(part)
-            # C_ij covers all of the demand, so each part pays its share of it
-            cost_columns.append(inst.cost[:, j] * part / d)
-            origins.append(inst.original_customer[j])
-
-    return Instance(
-        name=inst.name,
-        capacity=inst.capacity,
-        fixed_cost=inst.fixed_cost,
-        demand=np.array(demands),
-        cost=np.column_stack(cost_columns),
-        original_customer=np.array(origins),
-    )
+    return inst
 
 
 def get_instance(name):
@@ -170,7 +133,7 @@ if __name__ == "__main__":
         print(f"  fixed cost   min {inst.fixed_cost.min():,.0f}  max {inst.fixed_cost.max():,.0f}")
         print(f"  demand       total {inst.demand.sum():,.0f}  max {inst.demand.max():,.0f}")
         try:
-            prepared = prepare_instance(inst)
-            print(f"  OK: ready for the MOEAs ({prepared.n} customers after preparation)")
+            prepare_instance(inst)
+            print("  OK: ready for the MOEAs")
         except InfeasibleInstanceError as error:
             print(f"  INFEASIBLE: {error}")
