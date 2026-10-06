@@ -50,7 +50,7 @@ def test_decode_is_deterministic_and_does_not_modify_input():
 
 
 def test_single_open_facility_serves_everyone_when_it_fits():
-    # cap101: every facility holds total demand, so one open facility is enough.
+    # in cap101 one facility can hold all demand
     inst = load_instance("cap101")
     chrom = np.zeros(inst.m, dtype=bool)
     chrom[3] = True
