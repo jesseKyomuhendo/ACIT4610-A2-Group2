@@ -1,0 +1,1 @@
+{"instance": "cap42", "category": "small_2", "status": "infeasible", "reason": "cap42 has no feasible solution: customer 11 (demand 5,495), customer 34 (demand 12,912) exceed(s) the largest facility capacity of 5,000, but every customer must be served by exactly one facility.", "runs": []}
