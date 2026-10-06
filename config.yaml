@@ -10,11 +10,14 @@ paths:
   tables_dir: results/tables    # results tables as CSV and PNG
   figures_dir: results/figures  # Pareto-front plots
 
-# Benchmark instances, one per size category
+# Benchmark instances, two per size category
 instances:
-  small: cap41      # 16 facilities and 50 customers
-  medium: cap101    # 25 facilities and 50 customers
-  large: cap121     # 50 facilities and 50 customers
+  small_1: cap41      # 16 facilities and 50 customers
+  small_2: cap42      # 16 facilities and 50 customers
+  medium_1: cap101    # 25 facilities and 50 customers
+  medium_2: cap102    # 25 facilities and 50 customers
+  large_1: cap121     # 50 facilities and 50 customers
+  large_2: cap122     # 50 facilities and 50 customers
 
 oversized_demand: report_infeasible   # report_infeasible stops with a message, split divides oversized customers (only if the lecturer allows it)
 
