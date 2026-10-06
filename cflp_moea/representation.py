@@ -52,7 +52,6 @@ def decode(instance: CFLPInstance, chromosome: np.ndarray) -> Solution:
     # assign largest customers first, to the cheapest open facility with room
     for j in np.argsort(-d, kind="stable"):
         if big[j]:
-            _split_customer(j, y, residual, x, instance)
             continue
         fits = y & (residual >= d[j] - _EPS)
         if fits.any():
@@ -68,9 +67,51 @@ def decode(instance: CFLPInstance, chromosome: np.ndarray) -> Solution:
         x[i, j] = 1.0
         residual[i] -= d[j]
 
+    _improve(x, y, residual, big, instance)
+
+    # oversized customers go last, split over the room that is left
+    for j in np.flatnonzero(big):
+        _split_customer(j, y, residual, x, instance)
+
     # close facilities that serve nobody
     y &= x.sum(axis=1) > 0
     return Solution(y=y, x=x)
+
+
+def _improve(x: np.ndarray, y: np.ndarray, residual: np.ndarray, big: np.ndarray,
+             instance: CFLPInstance) -> None:
+    """Local search: move or swap single-sourced customers while it lowers cost and fits."""
+    d, C = instance.demand, instance.alloc_cost
+    movable = np.flatnonzero(~big)
+    where = x[:, movable].argmax(axis=0)          # current facility of each movable customer
+    improved = True
+    while improved:
+        improved = False
+        for a, j in enumerate(movable):
+            i = where[a]
+            # move j to the open facility with room that saves the most
+            gain = np.where(y & (residual >= d[j] - _EPS), C[i, j] - C[:, j], 0.0)
+            k = int(np.argmax(gain))
+            if gain[k] > _EPS:
+                x[i, j], x[k, j] = 0.0, 1.0
+                residual[i] += d[j]
+                residual[k] -= d[j]
+                where[a] = k
+                improved = True
+                continue
+            # swap j with a customer at another facility if both still fit
+            other = where
+            fit = ((residual[i] + d[j] - d[movable] >= -_EPS)
+                   & (residual[other] + d[movable] - d[j] >= -_EPS) & (other != i))
+            gain = np.where(fit, C[i, j] + C[other, movable] - C[other, j] - C[i, movable], 0.0)
+            b = int(np.argmax(gain))
+            if gain[b] > _EPS:
+                k, jb = other[b], movable[b]
+                x[i, j], x[k, j], x[k, jb], x[i, jb] = 0.0, 1.0, 0.0, 1.0
+                residual[i] += d[j] - d[jb]
+                residual[k] += d[jb] - d[j]
+                where[a], where[b] = k, i
+                improved = True
 
 
 def _split_customer(j: int, y: np.ndarray, residual: np.ndarray, x: np.ndarray,
