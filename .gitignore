@@ -221,3 +221,4 @@ __marimo__/
 *.pdf
 !report/**/*.pdf
 .DS_Store
+results/quick/
