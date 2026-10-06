@@ -1,0 +1,119 @@
+# =============================================================================
+# ACIT4610 Assignment 2 - Multi-objective CFLP with NSGA-II and SPEA2
+#
+# This is the ONLY place settings are defined.
+# Python code never reads this file directly: it imports constants from
+# src/util/fetch_config.py, which loads this file once.
+# All paths are relative to the project root (the folder this file is in).
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Paths
+# -----------------------------------------------------------------------------
+paths:
+  data_dir: data/orlib          # the OR-Library cap files
+  checksum_file: SHA256SUMS     # inside data_dir, used to verify the data is unmodified
+  results_dir: results          # everything the scripts produce goes here
+  raw_dir: results/raw          # saved final fronts and runtimes for every run
+  tables_dir: results/tables    # results tables (CSV)
+  figures_dir: results/figures  # Pareto-front plots
+
+
+# -----------------------------------------------------------------------------
+# Benchmark instances (one per size category, as required by the assignment)
+# -----------------------------------------------------------------------------
+instances:
+  small: cap41      # 16 facilities x 50 customers
+  medium: cap101    # 25 facilities x 50 customers
+  large: cap121     # 50 facilities x 50 customers
+
+# What to do when a customer's demand is larger than every facility's capacity
+# (this happens for customers 11 and 34 in cap41 and cap42):
+#   report_infeasible -> stop with a clear message; the instance is reported
+#                        as having no feasible solution
+#   split             -> split each such customer into capacity-sized parts with
+#                        proportional costs (use ONLY if the lecturer allows it)
+oversized_demand: report_infeasible
+
+
+# -----------------------------------------------------------------------------
+# Experiment setup
+# -----------------------------------------------------------------------------
+experiment:
+  n_runs: 10        # independent runs per algorithm / instance / configuration
+  base_seed: 42     # run k uses seed base_seed + k; NSGA-II and SPEA2 get the
+                    # same seed in the same run
+
+
+# -----------------------------------------------------------------------------
+# Parameter configurations
+# Both algorithms use exactly the same values inside each configuration.
+#   pop_size         number of individuals in the population
+#   archive_size     SPEA2 archive size (kept equal to pop_size for fairness)
+#   initialization   how the first population is created
+#   crossover_prob   probability that two parents are recombined
+#   mutation_prob    probability that each gene (customer assignment) is changed
+#   max_evaluations  termination: stop after this many objective evaluations
+# -----------------------------------------------------------------------------
+configurations:
+  C1:                       # baseline
+    pop_size: 100
+    archive_size: 100
+    initialization: random
+    crossover_prob: 0.9
+    mutation_prob: 0.02
+    max_evaluations: 20000
+
+  C2:                       # larger population, same budget -> fewer generations
+    pop_size: 200
+    archive_size: 200
+    initialization: random
+    crossover_prob: 0.9
+    mutation_prob: 0.02
+    max_evaluations: 20000
+
+  C3:                       # more mutation, less crossover -> more exploration
+    pop_size: 100
+    archive_size: 100
+    initialization: random
+    crossover_prob: 0.7
+    mutation_prob: 0.10
+    max_evaluations: 20000
+
+
+# -----------------------------------------------------------------------------
+# Algorithm details shared by both MOEAs
+# -----------------------------------------------------------------------------
+algorithms:
+  tournament_size: 2    # binary tournament selection in both algorithms
+  spea2_k: null         # k-th nearest neighbour for SPEA2 density;
+                        # null = sqrt(pop_size + archive_size), as in the original paper
+
+
+# -----------------------------------------------------------------------------
+# Hypervolume
+# Objectives are min-max normalised per instance using the ideal and nadir
+# points of all final fronts (both algorithms, all configurations and runs),
+# so both algorithms are scaled in exactly the same way.
+# -----------------------------------------------------------------------------
+hypervolume:
+  reference_point: [1.1, 1.1]   # in normalised space; worse than every solution
+
+
+# -----------------------------------------------------------------------------
+# Statistical test (implemented by hand in src/stats_tests.py)
+# -----------------------------------------------------------------------------
+statistics:
+  test: wilcoxon_signed_rank    # paired: run k of NSGA-II vs run k of SPEA2
+  alpha: 0.05                   # significance level
+
+
+# -----------------------------------------------------------------------------
+# Plotting
+# -----------------------------------------------------------------------------
+plotting:
+  dpi: 300
+  front_to_plot: combined       # combined = non-dominated set of all runs
+                                # best_run = the run with the highest hypervolume
+  config_to_plot: C1            # which configuration the Pareto plots show

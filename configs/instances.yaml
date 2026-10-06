@@ -1,6 +1,0 @@
-# Benchmark instances (files in data/orlib/)
-small:  [cap41, cap42]
-medium: [cap101, cap102]
-large:  [cap121, cap122]
-# One per category is required for the analysis/report:
-analysis: [cap41, cap101, cap121]
