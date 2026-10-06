@@ -13,16 +13,15 @@ def dominates(a: np.ndarray, b: np.ndarray) -> bool:
     return bool(np.all(a <= b) and np.any(a < b))
 
 
+def dominance_matrix(F: np.ndarray) -> np.ndarray:
+    """D[p, q] is True when solution p dominates solution q (same rule as dominates())."""
+    A, B = F[:, None, :], F[None, :, :]
+    return np.all(A <= B, axis=2) & np.any(A < B, axis=2)
+
+
 def non_dominated_mask(F: np.ndarray) -> np.ndarray:
     """True for rows of F (one row per solution) that no other row dominates."""
-    n = len(F)
-    mask = np.ones(n, dtype=bool)
-    for i in range(n):
-        for j in range(n):
-            if i != j and dominates(F[j], F[i]):
-                mask[i] = False
-                break
-    return mask
+    return ~dominance_matrix(F).any(axis=0)
 
 
 def unique_non_dominated(X: np.ndarray, F: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
