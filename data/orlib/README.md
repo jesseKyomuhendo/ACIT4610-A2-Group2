@@ -28,3 +28,18 @@ c_1j c_2j ... c_mj               <- ... followed by m allocation costs C_ij (may
 ```
 `C_ij` is the cost of allocating **all** of customer j's demand to facility i. It must
 NOT be multiplied by `d_j` again (Objective 2 = sum C_ij x_ij).
+
+## Oversized customers in cap41 / cap42
+In cap41 and cap42 every facility has capacity 5000, but two customers have demand
+5495 and 12912. They fit in no single facility, so strict single-sourcing
+(each customer assigned to exactly one facility) has no feasible solution.
+
+**Group decision:** a customer whose demand exceeds the largest facility capacity
+may be split across several open facilities. All other customers are single-sourced.
+Capacity is never exceeded and the data is not changed.
+
+- For a split customer, facility i is charged `C_ij * (q_ij / d_j)`, where `q_ij` is
+  the amount it serves (shares sum to `d_j`). Unsplit customers are charged `C_ij`.
+- Only cap41 and cap42 are affected; cap101, cap102, cap121 and cap122 use strict
+  single-sourcing.
+- The same rule is used by both MOEAs.

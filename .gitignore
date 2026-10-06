@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Assignment brief and macOS files (not committed)
+*.pdf
+!report/**/*.pdf
+.DS_Store
