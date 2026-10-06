@@ -1,0 +1,10 @@
+instance,config,p_value,a12_nsga2_vs_spea2,result
+cap101,A,0.00018267179110955002,0.0,SPEA2
+cap101,B,0.3837776503207253,0.62,no significant difference
+cap101,C,0.06536613792864432,0.74,no significant difference
+cap121,A,0.18587673236587599,0.32,no significant difference
+cap121,B,0.3846730627355087,0.38,no significant difference
+cap121,C,0.8501067391385259,0.47,no significant difference
+cap41,A,1.0,0.5,no significant difference
+cap41,B,1.0,0.5,no significant difference
+cap41,C,1.0,0.5,no significant difference
