@@ -1,7 +1,9 @@
 """Seeding, timing and saving results."""
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 
 import numpy as np
 
@@ -23,4 +25,12 @@ class Timer:
     def __exit__(self, *exc) -> None:
         self.seconds = time.perf_counter() - self._start
 
-# TODO (T9): saving/loading results
+
+def save_json(data: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data))
+
+
+def load_results(folder: Path) -> list[dict]:
+    """All raw run results in a folder."""
+    return [json.loads(p.read_text()) for p in sorted(Path(folder).glob("*.json"))]
