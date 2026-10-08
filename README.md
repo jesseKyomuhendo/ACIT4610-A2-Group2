@@ -126,6 +126,6 @@ Run k of both algorithms uses the seed `base_seed + k`, so every result can be r
 
 The six instances cap61, cap62, cap101, cap102, cap121 and cap122 come unmodified from the OR-Library by J. E. Beasley. They are stored in `data/orlib`, and `SHA256SUMS` lets the code verify that they have not changed.
 
-cap61 and cap62 replace the original small instances cap41 and cap42, following a correction from the lecturer. In cap41 and cap42 some customers demand more than any single facility can hold, which makes them infeasible under the assignment's requirement that every customer is assigned to exactly one opened facility (`Σi xij = 1`) without exceeding that facility's capacity (`Σj dj xij ≤ Si yi`). Customer demand is never split or changed. The code still checks every instance and reports an instance as infeasible if a customer cannot fit in any facility.
+cap61 and cap62 replace the original small instances cap41 and cap42. 
 
 `capopt.txt` is kept for reference and is not used by the code.
